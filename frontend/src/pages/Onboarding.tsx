@@ -144,6 +144,11 @@ export default function Onboarding() {
           <span className="w-10 text-right text-xs font-semibold text-muted">{step + 1}/{STEPS.length}</span>
         </div>
         <Progress value={((step + 1) / STEPS.length) * 100} />
+        {(me?.role === 'admin' || me?.role === 'moderator') && (
+          <button onClick={() => nav('/admin')} className="press mt-3 w-full rounded-xl bg-elevated py-2 text-sm font-semibold text-muted">
+            Staff: open the admin panel
+          </button>
+        )}
       </header>
 
       <main className="scroll-hide flex-1 overflow-y-auto px-5 pb-6">
