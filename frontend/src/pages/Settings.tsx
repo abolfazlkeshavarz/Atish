@@ -63,6 +63,9 @@ export default function Settings() {
 
       <h2 className="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-muted">Account</h2>
       <Group>
+        {(me.role === 'admin' || me.role === 'moderator') && (
+          <Row icon={<ShieldCheck className="h-5 w-5" />} title="Admin panel" sub={me.role === 'admin' ? 'Manage users, reports, plans and settings' : 'Moderate users, reports and photos'} onClick={() => nav('/admin')} />
+        )}
         <Row icon={<span>✈️</span>} title="Telegram" sub="Verified ✓" />
         <Row icon={<Phone className="h-5 w-5" />} title="Phone number" sub={me.phone_verified ? 'Verified ✓ — never shown to anyone' : 'Optional · adds a trust badge'}
           right={me.phone_verified
