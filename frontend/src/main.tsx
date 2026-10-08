@@ -15,6 +15,12 @@ function applyTheme() {
 platform.init()
 applyTheme()
 platform.onThemeChange(applyTheme)
+// The Telegram SDK loads async (see index.html); hook it up when it arrives after us
+window.addEventListener('tg-sdk-ready', () => {
+  platform.init()
+  applyTheme()
+  platform.onThemeChange(applyTheme)
+}, { once: true })
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

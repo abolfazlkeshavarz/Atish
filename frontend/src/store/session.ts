@@ -51,7 +51,15 @@ export const useSession = create<SessionState>((set, getState) => ({
       set({ catalog: cat.catalog, app: cat.app })
 
       // Inside Telegram we always re-authenticate: signed init data is the source of truth.
-      if (platform.inTelegram()) await loginWithTelegram()
+      if (platform.inTelegram()) {
+        try {
+          await loginWithTelegram()
+        } catch (e) {
+          // Telegram replays old launch data when it restores a minimised Mini App, so it can be
+          // past the server's max age. A session we already hold is still good — keep using it.
+          if ((e as ApiError).status !== 401 || !auth.get()) throw e
+        }
+      }
       if (!auth.get()) {
         set({ phase: 'needs-login' })
         return

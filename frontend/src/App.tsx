@@ -157,6 +157,7 @@ function LoginScreen() {
   const [id, setId] = useState(() => String(100000 + Math.floor(Math.random() * 900000)))
   const [name, setName] = useState('Alex')
   const [busy, setBusy] = useState(false)
+  const inTg = platform.inTelegram()
 
   return (
     <div className="mx-auto flex h-full max-w-sm flex-col items-center justify-center px-6 text-center">
@@ -164,10 +165,19 @@ function LoginScreen() {
       <h1 className="text-gradient text-4xl font-black">Atish</h1>
       <p className="mt-2 text-muted">Find people who are looking for the same kind of connection.</p>
 
-      {BOT && (
-        <Button size="lg" block className="mt-8" onClick={() => platform.openTelegramLink(`https://t.me/${BOT}`)}>Open in Telegram</Button>
+      {inTg ? (
+        <>
+          <p className="mt-8 text-sm text-faint">Your Telegram sign-in has expired. Try again, or close Atish and reopen it from the bot.</p>
+          <Button size="lg" block className="mt-4" onClick={() => location.reload()}>Try again</Button>
+        </>
+      ) : (
+        <>
+          {BOT && (
+            <Button size="lg" block className="mt-8" onClick={() => platform.openTelegramLink(`https://t.me/${BOT}`)}>Open in Telegram</Button>
+          )}
+          {!BOT && !DEV_LOGIN && <p className="mt-8 text-sm text-faint">Open Atish from the Telegram bot to continue.</p>}
+        </>
       )}
-      {!BOT && !DEV_LOGIN && <p className="mt-8 text-sm text-faint">Open Atish from the Telegram bot to continue.</p>}
 
       {DEV_LOGIN && (
         <div className="mt-8 w-full rounded-xl2 border border-dashed border-line p-4 text-left">
