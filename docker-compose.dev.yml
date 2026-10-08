@@ -1,0 +1,31 @@
+# Local development infrastructure only (Postgres + Redis). Run the API and the
+# web app on your machine:  make dev-up && make run  /  make run-frontend
+# Ports are non-default on purpose so they never collide with a native install.
+name: atish-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: atish-dev-postgres
+    environment:
+      POSTGRES_USER: atish
+      POSTGRES_PASSWORD: atish
+      POSTGRES_DB: atish
+    ports:
+      - "127.0.0.1:${DEV_DB_PORT:-55432}:5432"
+    volumes:
+      - devpg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atish -d atish"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: atish-dev-redis
+    ports:
+      - "127.0.0.1:${DEV_REDIS_PORT:-56379}:6379"
+
+volumes:
+  devpg:

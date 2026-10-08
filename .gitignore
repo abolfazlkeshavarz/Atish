@@ -1,0 +1,32 @@
+# secrets & local config
+.env
+.env.*
+!.env.example
+
+# tooling / editor state (local only)
+.claude/
+CLAUDE.md
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# dependencies & build output
+node_modules/
+frontend/dist/
+backend/bin/
+dist/
+*.exe
+*.exe~
+*.test
+*.out
+
+# runtime data
+data/
+backups/
+backup*.sql
+*.tar.gz
+*.log
+*.tmp
+*.bak
+*.swp

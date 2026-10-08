@@ -1,0 +1,12 @@
+# Shell scripts, the Makefile and SQL must keep LF line endings even when
+# checked out on Windows, otherwise they break on the Linux server.
+* text=auto
+*.sh        text eol=lf
+Makefile    text eol=lf
+Dockerfile  text eol=lf
+*.sql       text eol=lf
+*.conf      text eol=lf
+*.template  text eol=lf
+*.yml       text eol=lf
+*.png       binary
+*.jpg       binary

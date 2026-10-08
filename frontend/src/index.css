@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ───────── Design tokens (RGB triplets so Tailwind alpha works) ─────────
+   Brand: ember orange → hot pink ("Atish" = fire). Friends = teal, Relationship = rose. */
+:root {
+  --bg: 249 249 251;
+  --surface: 255 255 255;
+  --elevated: 240 240 245;
+  --line: 228 228 236;
+  --ink: 15 15 20;
+  --muted: 109 109 124;
+  --faint: 160 160 176;
+  --brand: 255 59 92;
+  --brand2: 139 92 246;
+  --friend: 20 184 166;
+  --love: 255 56 100;
+  --ok: 34 197 94;
+  --warn: 245 158 11;
+  --danger: 239 68 68;
+  --shadow: 30 25 60;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+[data-theme='dark'] {
+  --bg: 15 15 20;
+  --surface: 24 24 32;
+  --elevated: 36 36 48;
+  --line: 50 50 66;
+  --ink: 249 249 251;
+  --muted: 160 160 178;
+  --faint: 108 108 128;
+  --brand: 255 79 110;
+  --brand2: 155 118 250;
+  --friend: 45 212 191;
+  --love: 255 82 120;
+  --shadow: 0 0 0;
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: rgb(var(--bg));
+  color: rgb(var(--ink));
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+* { box-sizing: border-box; }
+button { font: inherit; color: inherit; }
+input, textarea, select { font: inherit; color: inherit; }
+::selection { background: rgb(var(--brand) / 0.25); }
+.scroll-hide { scrollbar-width: none; }
+.scroll-hide::-webkit-scrollbar { display: none; }
+
+@layer components {
+  .brand-gradient { background-image: linear-gradient(135deg, rgb(var(--brand)) 0%, #D13FA8 55%, rgb(var(--brand2)) 100%); }
+  .friend-gradient { background-image: linear-gradient(135deg, #14B8A6, #3B82F6); }
+  .love-gradient { background-image: linear-gradient(135deg, #FF3B5C, #FF6EA7); }
+  .both-gradient { background-image: linear-gradient(135deg, #14B8A6 0%, #8B5CF6 50%, #FF3B5C 100%); }
+  .text-gradient { @apply brand-gradient bg-clip-text text-transparent; }
+  .glass { background: rgb(var(--surface) / 0.78); backdrop-filter: saturate(1.6) blur(18px); -webkit-backdrop-filter: saturate(1.6) blur(18px); }
+  .field {
+    @apply w-full rounded-2xl border border-line bg-surface px-4 py-3.5 text-[15px] outline-none transition placeholder:text-faint;
+  }
+  .field:focus { border-color: rgb(var(--brand)); box-shadow: 0 0 0 4px rgb(var(--brand) / 0.14); }
+  .press { @apply transition-transform duration-150 active:scale-[0.96]; }
+  .skeleton { position: relative; overflow: hidden; @apply bg-elevated; }
+  .skeleton::after {
+    content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgb(var(--surface) / 0.7), transparent);
+    animation: shimmer 1.3s infinite;
+  }
+}
+
+/* Photo placeholder when an image has no url yet */
+.ph-bg { background: linear-gradient(135deg, rgb(var(--elevated)), rgb(var(--line))); }
+
+input[type='range'] { -webkit-appearance: none; appearance: none; height: 6px; border-radius: 999px; background: rgb(var(--line)); outline: none; width: 100%; }
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #fff; cursor: pointer;
+  border: 3px solid rgb(var(--brand)); box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+}
+input[type='range']::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 3px solid rgb(var(--brand)); }
