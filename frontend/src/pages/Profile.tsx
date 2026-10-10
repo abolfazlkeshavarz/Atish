@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BadgeCheck, ChevronRight, Crown, Pencil, Phone, Settings as Cog } from 'lucide-react'
+import { ChevronRight, Crown, Pencil, Settings as Cog } from 'lucide-react'
+import { VerifyPill } from '@/components/VerifyBadge'
 import { useSession } from '@/store/session'
 import { useUI } from '@/store/ui'
 import { Card, Group, Progress, Row, cx } from '@/components/ui'
@@ -52,8 +53,10 @@ export default function Profile() {
         </button>
         <div className="flex flex-wrap items-center gap-2 p-4">
           <IntentBadges types={me.connection_types} />
-          <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/12 px-2.5 py-1 text-xs font-bold text-sky-500"><BadgeCheck className="h-3.5 w-3.5" /> Telegram</span>
-          {me.phone_verified && <span className="inline-flex items-center gap-1 rounded-full bg-ok/10 px-2.5 py-1 text-xs font-bold text-ok"><Phone className="h-3.5 w-3.5" /> Phone</span>}
+          {me.telegram_verified && <VerifyPill kind="telegram" label="Telegram" />}
+          {me.phone_verified ? <VerifyPill kind="phone" label="Phone" /> : <VerifyPill kind="phone" label="Verify phone" muted onClick={() => nav('/settings')} />}
+          {me.photo_verified && <VerifyPill kind="photo" label="Photo" />}
+          {me.identity_verified && <VerifyPill kind="identity" label="ID" />}
         </div>
       </Card>
 

@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
-import { BadgeCheck, Ban, ChevronLeft, ChevronRight, Flag, MapPin, MoreHorizontal, Phone, ShieldCheck, Sparkles, X, Heart } from 'lucide-react'
+import { Ban, ChevronLeft, ChevronRight, Flag, MapPin, MoreHorizontal, ShieldCheck, X, Heart } from 'lucide-react'
+import { VerifyBadge, VerifyPill } from '@/components/VerifyBadge'
 import { post } from '@/api/client'
 import type { Catalog, PublicProfile } from '@/api/types'
 import { useSession } from '@/store/session'
@@ -33,12 +34,16 @@ export function IntentBadges({ types, className }: { types: string[]; className?
   )
 }
 
+/** Seals shown next to a name. Telegram is implied for everyone, so it is only spelled out in the full profile. */
 export function VerifiedBadges({ p, size = 16 }: { p: PublicProfile; size?: number }) {
+  const b = p.badges
+  if (!b.identity && !b.photo && !b.phone && !b.premium) return null
   return (
     <span className="inline-flex items-center gap-1 align-middle">
-      {(p.badges.identity || p.badges.photo) && <BadgeCheck style={{ width: size, height: size }} className="text-sky-400" aria-label="Verified" />}
-      {p.badges.phone && <Phone style={{ width: size - 3, height: size - 3 }} className="text-ok" aria-label="Phone verified" />}
-      {p.badges.premium && <Sparkles style={{ width: size - 1, height: size - 1 }} className="text-amber-400" aria-label="Plus" />}
+      {b.identity && <VerifyBadge kind="identity" size={size} />}
+      {b.photo && <VerifyBadge kind="photo" size={size} />}
+      {b.phone && <VerifyBadge kind="phone" size={size} />}
+      {b.premium && <VerifyBadge kind="plus" size={size} />}
     </span>
   )
 }
@@ -197,6 +202,14 @@ export function ProfileSheet({ p, onClose, actions, onChanged }: {
         </div>
 
         <IntentBadges types={p.connection_types} className="my-3" />
+
+        <div className="mb-4 flex flex-wrap gap-1.5">
+          {p.badges.telegram && <VerifyPill kind="telegram" label="Telegram verified" />}
+          {p.badges.phone && <VerifyPill kind="phone" label="Phone verified" />}
+          {p.badges.photo && <VerifyPill kind="photo" label="Photo verified" />}
+          {p.badges.identity && <VerifyPill kind="identity" label="ID verified" />}
+          {p.badges.premium && <VerifyPill kind="plus" label="Atish Plus" />}
+        </div>
 
         {p.compat && reasons.length > 0 && (
           <div className="mb-5 rounded-xl2 border border-line/70 bg-surface p-4 shadow-soft">
