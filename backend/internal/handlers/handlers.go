@@ -78,7 +78,7 @@ func (h *Handlers) AdminLogin(c *gin.Context) {
 	if !httpx.Bind(c, &in) {
 		return
 	}
-	res, err := h.Auth.AdminLogin(in.Username, in.Password)
+	res, err := h.Auth.AdminLogin(c.Request.Context(), in.Username, in.Password)
 	if err != nil {
 		httpx.Fail(c, err)
 		return

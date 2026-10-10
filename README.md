@@ -203,6 +203,7 @@ make update                          # git pull + rebuild
 | `make admin-set KEY=free_daily_likes VALUE=100` · `admin-settings` | any platform setting |
 | `make admin-maintenance ON=1` · `admin-registration OPEN=0` · `admin-premium-mode ON=0` · `admin-banner TEXT="…"` | quick switches |
 | `make admin-broadcast TEXT="…"` · `admin-audit` · `admin-delete-user U=…` | announcements, audit trail, erasure |
-| `make admin-password` | rotate the `/admin` password in `.env` and restart the API |
+| `make admin-set-password U=@name [PASSWORD=…]` · `admin-clear-password U=…` | give an admin/moderator (promoted ones too) their own `/admin` password — generated if omitted, stored hashed, sign in with their Atish or Telegram username |
+| `make admin-password` | rotate the shared root password (`ADMIN_PASSWORD` in `.env`) and restart the API |
 
 Every change made through the CLI is written to the same audit log as the admin panel (actor `cli`).

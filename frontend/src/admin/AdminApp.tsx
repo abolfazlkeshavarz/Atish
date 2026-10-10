@@ -112,7 +112,7 @@ function Login({ onDone }: { onDone: (token: string, who: { role: string; actor:
           <Logo tile size={48} glow />
           <div><div className="text-xl font-black">Atish Admin</div><div className="text-xs text-muted">Sign in to manage the platform</div></div>
         </div>
-        <Field label="Username"><input className="field" value={u} onChange={(e) => setU(e.target.value)} autoComplete="username" /></Field>
+        <Field label="Username" hint="admin, or your own Atish username if you were given a password"><input className="field" value={u} onChange={(e) => setU(e.target.value)} autoComplete="username" /></Field>
         <Field label="Password" error={err}><input className="field" type="password" value={p} onChange={(e) => setP(e.target.value)} autoComplete="current-password" autoFocus /></Field>
         <Button block size="lg" loading={busy} disabled={!p}>Sign in</Button>
       </form>

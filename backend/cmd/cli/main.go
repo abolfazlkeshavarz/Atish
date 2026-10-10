@@ -78,6 +78,10 @@ func main() {
 		e.promote(args)
 	case "demote":
 		e.setRole(args, models.RoleUser)
+	case "set-password":
+		e.setPassword(args)
+	case "clear-password":
+		e.clearPassword(args)
 	case "set-status":
 		e.setStatus(args)
 	case "verify":
@@ -118,6 +122,8 @@ Users
   user        -user REF                   full detail (REF = id, Atish_name, name, telegram id or @username)
   promote     -telegram-id N [-role admin|moderator]
   demote      -user REF                   back to a normal user
+  set-password   -user REF [-password P]  admin-panel password for an admin/moderator (random if omitted)
+  clear-password -user REF                back to Telegram-only sign-in
   set-status  -user REF -status active|suspended|banned [-reason "..."]
   verify      -user REF -flag telegram|phone|photo|identity [-value true|false]
   delete-user -user REF -yes              erase the account (irreversible)
@@ -328,6 +334,48 @@ func (e *env) setRole(args []string, role string) {
 	e.invalidate(u.ID)
 	e.audit0("user.update", u.ID.String(), map[string]any{"role": role})
 	fmt.Printf("%s is now %s\n", name(u), role)
+}
+
+// staff resolves a user and refuses anyone who is not an admin or moderator.
+func (e *env) staff(ref string) *models.User {
+	u := e.resolve(ref)
+	if u.Role != models.RoleAdmin && u.Role != models.RoleModerator {
+		check(fmt.Errorf("%s is a %s. Promote them first: make admin-promote TG=<telegram id>", name(u), u.Role))
+	}
+	return u
+}
+
+func (e *env) setPassword(args []string) {
+	fs := flag.NewFlagSet("set-password", flag.ExitOnError)
+	ref := fs.String("user", "", "")
+	pw := fs.String("password", "", "leave empty to generate one")
+	_ = fs.Parse(args)
+	u := e.staff(*ref)
+	generated := false
+	if *pw == "" {
+		*pw = strings.NewReplacer("+", "", "/", "", "=", "").Replace(randB64(18))
+		generated = true
+	}
+	hash, err := services.HashPassword(*pw)
+	check(err)
+	check(e.repo.SetAdminPassword(e.ctx, u.ID, hash))
+	e.audit0("admin.password_set", u.ID.String(), map[string]any{"generated": generated})
+	login := name(u)
+	fmt.Printf("Admin panel password set for %s (%s).\n", login, u.Role)
+	fmt.Printf("  Sign in at /admin with username: %s   (or %s)\n", login, strings.TrimPrefix(login, "Atish_"))
+	if generated {
+		fmt.Printf("  Password: %s\n", *pw)
+	}
+}
+
+func (e *env) clearPassword(args []string) {
+	fs := flag.NewFlagSet("clear-password", flag.ExitOnError)
+	ref := fs.String("user", "", "")
+	_ = fs.Parse(args)
+	u := e.resolve(*ref)
+	check(e.repo.SetAdminPassword(e.ctx, u.ID, ""))
+	e.audit0("admin.password_clear", u.ID.String(), nil)
+	fmt.Printf("%s can no longer sign in to the admin panel with a password (Telegram sign-in is unaffected).\n", name(u))
 }
 
 func (e *env) setStatus(args []string) {

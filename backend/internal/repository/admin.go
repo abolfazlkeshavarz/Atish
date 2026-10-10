@@ -443,3 +443,32 @@ func (r *Repo) PromoteTelegram(ctx context.Context, tgID int64, role string) (uu
 		ON CONFLICT (telegram_user_id) DO UPDATE SET role=EXCLUDED.role, updated_at=now() RETURNING id`, tgID, role).Scan(&id)
 	return id, err
 }
+
+// AdminCreds is what the admin-panel password login needs about an account.
+type AdminCreds struct {
+	ID     uuid.UUID
+	Role   string
+	Status string
+	Hash   string
+}
+
+// AdminCredentials finds a staff account by Atish username (with or without
+// the Atish_ prefix) or Telegram username.
+func (r *Repo) AdminCredentials(ctx context.Context, login string) (*AdminCreds, error) {
+	login = strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(login), "@"))
+	var c AdminCreds
+	err := r.pool.QueryRow(ctx, `SELECT id, role, status, COALESCE(admin_password_hash,'') FROM users
+		WHERE status<>'deleted' AND role IN ('admin','moderator')
+		  AND (lower(atish_username)=lower($1) OR lower(atish_username)=lower('Atish_'||$1) OR lower(telegram_username)=lower($1))
+		LIMIT 1`, login).Scan(&c.ID, &c.Role, &c.Status, &c.Hash)
+	if err != nil {
+		return nil, NotFound(err)
+	}
+	return &c, nil
+}
+
+// SetAdminPassword stores a bcrypt hash; an empty hash removes password login.
+func (r *Repo) SetAdminPassword(ctx context.Context, id uuid.UUID, hash string) error {
+	_, err := r.pool.Exec(ctx, `UPDATE users SET admin_password_hash=NULLIF($2,''), updated_at=now() WHERE id=$1`, id, hash)
+	return err
+}

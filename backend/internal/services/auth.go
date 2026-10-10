@@ -9,6 +9,7 @@ import (
 	"math/rand/v2"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"atish/internal/apperr"
@@ -20,6 +21,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const UsernamePrefix = "Atish_"
@@ -153,17 +155,57 @@ func (a *AuthService) loginTelegramUser(ctx context.Context, tu *telegram.User) 
 	return &LoginResult{Token: tok, ExpiresAt: exp, IsNew: isNew}, nil
 }
 
-// AdminLogin is the credential login for the browser admin panel.
-func (a *AuthService) AdminLogin(username, password string) (*LoginResult, error) {
-	if a.cfg.AdminPassword == "" {
-		return nil, apperr.Forbidden("admin_login_disabled", "Admin password login is not configured")
+const MinAdminPasswordLen = 12
+
+var (
+	dummyHashOnce sync.Once
+	dummyHash     []byte
+)
+
+// HashPassword returns a bcrypt hash suitable for users.admin_password_hash.
+func HashPassword(password string) (string, error) {
+	if len(password) < MinAdminPasswordLen {
+		return "", fmt.Errorf("password must be at least %d characters", MinAdminPasswordLen)
 	}
-	u := subtle.ConstantTimeCompare([]byte(username), []byte(a.cfg.AdminUsername))
-	p := subtle.ConstantTimeCompare([]byte(password), []byte(a.cfg.AdminPassword))
-	if u&p != 1 {
+	if len(password) > 72 { // bcrypt silently ignores bytes beyond 72
+		return "", errors.New("password must be at most 72 characters")
+	}
+	h, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	return string(h), err
+}
+
+// AdminLogin is the credential login for the browser admin panel. Two kinds of
+// account can sign in:
+//   - the "root" account from ADMIN_USERNAME / ADMIN_PASSWORD (.env), and
+//   - any admin or moderator with a password set (make admin-set-password),
+//     identified by their Atish username (with or without Atish_) or Telegram
+//     username. These sessions are attributed to the person in the audit log.
+func (a *AuthService) AdminLogin(ctx context.Context, username, password string) (*LoginResult, error) {
+	if a.cfg.AdminPassword != "" {
+		u := subtle.ConstantTimeCompare([]byte(username), []byte(a.cfg.AdminUsername))
+		p := subtle.ConstantTimeCompare([]byte(password), []byte(a.cfg.AdminPassword))
+		if u&p == 1 {
+			tok, exp, err := a.Issue(RootAdminSubject, models.RoleAdmin)
+			if err != nil {
+				return nil, err
+			}
+			return &LoginResult{Token: tok, ExpiresAt: exp}, nil
+		}
+	}
+
+	creds, err := a.repo.AdminCredentials(ctx, username)
+	// Always run one bcrypt comparison so response time does not reveal whether
+	// the account exists or has a password.
+	dummyHashOnce.Do(func() { dummyHash, _ = bcrypt.GenerateFromPassword([]byte("atish-dummy-password"), 12) })
+	hash := dummyHash
+	if err == nil && creds.Hash != "" {
+		hash = []byte(creds.Hash)
+	}
+	match := bcrypt.CompareHashAndPassword(hash, []byte(password)) == nil
+	if err != nil || creds.Hash == "" || !match || creds.Status != models.StatusActive {
 		return nil, apperr.Unauthorized("Invalid credentials")
 	}
-	tok, exp, err := a.Issue(RootAdminSubject, models.RoleAdmin)
+	tok, exp, err := a.Issue(creds.ID.String(), creds.Role)
 	if err != nil {
 		return nil, err
 	}

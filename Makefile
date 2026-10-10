@@ -103,6 +103,7 @@ ADMIN = PROD="$(PROD)" bash scripts/admin.sh
         admin-settings admin-set admin-maintenance admin-banner \
         admin-registration admin-premium-mode admin-reports admin-resolve \
         admin-audit admin-broadcast admin-password admin-url \
+        admin-set-password admin-clear-password \
         health smoke test test-all lint fmt tidy deploy-check deploy-health
 
 # -------------------------------------------------------------------- help
@@ -345,7 +346,15 @@ admin-broadcast: ## Message every active user through the bot. TEXT="..."
 	@read -r -p "Send this to ALL users? Type 'yes': " a; [ "$$a" = "yes" ] || { echo "Cancelled."; exit 1; }
 	@$(ADMIN) broadcast -text "$(TEXT)" -yes
 
-admin-password: ## Rotate the admin-panel password in .env and restart the API. [PASSWORD=...]
+admin-set-password: ## Set an admin-panel password for an admin/moderator (promoted ones too). U=... [PASSWORD=...]
+	@test -n "$(U)" || { echo "U is required: make admin-set-password U=@HeIsAbolfazl"; exit 1; }
+	@$(ADMIN) set-password -user "$(U)" $(if $(PASSWORD),-password "$(PASSWORD)")
+
+admin-clear-password: ## Remove an admin's panel password (Telegram sign-in keeps working). U=...
+	@test -n "$(U)" || { echo "U is required"; exit 1; }
+	@$(ADMIN) clear-password -user "$(U)"
+
+admin-password: ## Rotate the shared root password (ADMIN_PASSWORD in .env) and restart the API. [PASSWORD=...]
 	@PASSWORD="$(PASSWORD)" bash scripts/rotate-admin-password.sh
 
 admin-url: ## Print the admin panel address
